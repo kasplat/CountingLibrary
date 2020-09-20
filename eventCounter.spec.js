@@ -15,7 +15,7 @@ it('Throws when given negative seconds', () => {
 })
 
 it('Throws when given too many seconds', () => {
-    expect(() => {evtctr.getEventCount(301)}).toThrow('Cannot request event count from more than 5 minutes ago.');
+    expect(() => {evtctr.getEventCount(301)}).toThrow('Cannot request event count from more than 300 seconds ago.');
 })
 
 it('Works with 0 events', () => {
@@ -49,6 +49,6 @@ it('Deletes events that are too old', async () => {
     shortTimeoutEvtTimer.logEvent();
     await wait(2 * 1000);
     shortTimeoutEvtTimer.logEvent();
-    shortTimeoutEvtTimer.deleteOldEvents();
+    shortTimeoutEvtTimer.deleteOldEvents(new Date());
     expect(shortTimeoutEvtTimer.events.length).toBe(1);
 })

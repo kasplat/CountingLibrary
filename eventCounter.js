@@ -30,9 +30,9 @@ class EventCounter {
         return isValid(events[0]) ? curLastIdx - 1 : curLastIdx;
       }
       if (events.length === 0) {
-        return -1;
+        return curLastIdx;
       }
-      let midPoint = Math.floor(events.length / 2);
+      const midPoint = Math.floor(events.length / 2);
       if (isValid(events[midPoint])) {
         return this.findLastInvalid(events.slice(0, midPoint), curLastIdx - (events.length - midPoint), isValid);
       } else {
@@ -49,10 +49,10 @@ class EventCounter {
         throw new Error('Cannot get event count less than 0 seconds ago.');
       }
       if (timeFrame > this.evtTooOld) {
-        throw new Error('Cannot request event count from more than 5 minutes ago.')
+        throw new Error('Cannot request event count from more than ' + this.evtTooOld.toString() + ' seconds ago.')
       }
-      let requestStartTime = Date.now();
-      this.deleteOldEvents(requestStartTime, timeFrame);
+      const requestStartTime = Date.now();
+      this.deleteOldEvents(requestStartTime);
       function isInRange(event) {
         return event > requestStartTime - (timeFrame * 1000);
       }
@@ -62,7 +62,9 @@ class EventCounter {
     }
 
     /**
-     * 
+     * Delete events more than evtTooOld seconds ago. This is only run when getEventCount is run.
+     * If we want this to run more asynchronously to let getEventCount be faster,
+     * we can run this in the background on a timer or something.
      * @param {Date} requestStartTime 
      */
     deleteOldEvents(requestStartTime) {
@@ -70,8 +72,7 @@ class EventCounter {
       function isNotTooOld(event) {
         return event > requestStartTime - (evtTooOld * 1000);
       }
-      let lastInvalidIdx = this.findLastInvalid(this.events, this.events.length - 1, isNotTooOld)
-      console.log(lastInvalidIdx);
+      const lastInvalidIdx = this.findLastInvalid(this.events, this.events.length - 1, isNotTooOld)
       this.events = this.events.slice(lastInvalidIdx + 1);
     }
 }
