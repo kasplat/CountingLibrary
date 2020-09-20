@@ -1,37 +1,38 @@
-
-const EVENT_TOO_OLD_SECONDS = 60 * 5;
+/**
+ * Event Counter class to keep track of how many events were logged. 
+ */
+const EVENT_TOO_OLD_SECONDS = 60 * 5; // default is 5 minutes
 
 class EventCounter {
+
     constructor(evtTooOld = EVENT_TOO_OLD_SECONDS) {
         this.evtTooOld = evtTooOld;
         this.events = [];
     }
 
+    /**
+     * Log an event right now.
+     */
     logEvent() {
         this.events.push(Date.now())
     }
 
     /**
      * Binary search to find the index of the last invalid event in the array. 
-     * Assumes that the events are from least to most recent. 
+     * Assumes that the events are ordered from oldest to newest. 
      * If all elements are valid, we return -1
-     * @param {events we are currently looking at} events 
-     * @param {the index of this event slice in the actual events} curLastIdx 
-     * @param {function to determine if an elemnt is valid} isValid 
+     * @param {Date[]} events 
+     * @param {number} curLastIdx 
+     * @param {(Date) => boolean)} isValid 
      */
     findLastInvalid(events, curLastIdx, isValid) {
-      console.log('events.lenght: ', events.length);
-      console.log('curLastIdx: ', curLastIdx);
       if (events.length === 1) {
-        console.log('last el is valid: ', isValid(events[0]));
         return isValid(events[0]) ? curLastIdx - 1 : curLastIdx;
       }
       if (events.length === 0) {
         return -1;
       }
       let midPoint = Math.floor(events.length / 2);
-      console.log('midpt is valid: ', isValid(events[midPoint]));
-      console.log('midpt: ', midPoint);
       if (isValid(events[midPoint])) {
         return this.findLastInvalid(events.slice(0, midPoint), curLastIdx - (events.length - midPoint), isValid);
       } else {
@@ -58,43 +59,20 @@ class EventCounter {
       const lastInvalidIdx = this.findLastInvalid(this.events, this.events.length - 1, isInRange)
       const invalidElementCount = lastInvalidIdx + 1
       return this.events.length - invalidElementCount;
-      // let i = this.events.length - 1;
-      // let evtCount = 0;
-      // while (i >= 0) {
-      //   let curEvent = this.events[i];
-      //   if (requestStartTime - (timeFrame * 1000) < curEvent) {
-      //     evtCount++;
-      //   } else {
-      //     break;
-      //   }
-      //   i--;
-      // }
-      // console.log('in the last ', timeFrame, ' seconds, ', evtCount, ' events occured.');
-      // return evtCount;
     }
 
+    /**
+     * 
+     * @param {Date} requestStartTime 
+     */
     deleteOldEvents(requestStartTime) {
       const evtTooOld = this.evtTooOld; // Keep in scope for function below
       function isNotTooOld(event) {
         return event > requestStartTime - (evtTooOld * 1000);
       }
       let lastInvalidIdx = this.findLastInvalid(this.events, this.events.length - 1, isNotTooOld)
-      console.log('this events before: ', this.events);
+      console.log(lastInvalidIdx);
       this.events = this.events.slice(lastInvalidIdx + 1);
-      // let i = this.events.length - 1;
-      // while (i < this.events.length) {
-      //   console.log('evtTooOld: ', this.evtTooOld);
-      //   console.log('on event: ', i);
-      //   let curEvent = this.events[i];
-      //   console.log('curEvent: ', curEvent);
-      //   console.log('requestStartTime: ', requestStartTime);
-      //   // If we are 5 minutes before the request time and still greater than the curEvent, then stop slice here.
-      //   if (requestStartTime - (this.evtTooOld * 1000) > curEvent) {
-      //     break;
-      //   }
-      //   i++;
-      // }
-      // this.events = this.events.slice(i);
     }
 }
 
