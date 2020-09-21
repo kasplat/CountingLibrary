@@ -18,12 +18,14 @@ class EventCounter {
     }
 
     /**
-     * Binary search to find the index of the last invalid event in the array. 
+     * Recursive binary search to find the index of the last invalid event in the array
+     * according to the passed in isValid function.
+     * This is used for getEventCount and deleteOldEvents to find where the old events end and the new ones begin.
      * Assumes that the events are ordered from oldest to newest. 
      * If all elements are valid, we return -1
-     * @param {Date[]} events 
-     * @param {number} curLastIdx 
-     * @param {(Date) => boolean)} isValid 
+     * @param {Date[]} events - the current events we are looking at. The size of this shrinks by half every time.
+     * @param {number} curLastIdx - The last index, which only changes when we pick the bottom half of the array.
+     * @param {(Date) => boolean)} isValid - A function that determines if the given date is a valid date.
      */
     findLastInvalid(events, curLastIdx, isValid) {
       if (events.length === 1) {
@@ -41,8 +43,8 @@ class EventCounter {
     }
 
     /**
-     * Get the number of events in a specified number of seconds ago.
-     * @param {timeFrame} number of seconds ago
+     * Get the number of events that occured in a specified number of seconds ago.
+     * @param {number} TimeFrame - seconds ago that we are interested in
      */
     getEventCount(timeFrame) {
       if (timeFrame < 0) {
@@ -52,6 +54,8 @@ class EventCounter {
         throw new Error('Cannot request event count from more than ' + this.evtTooOld.toString() + ' seconds ago.')
       }
       const requestStartTime = Date.now();
+      // Delete old events so that we don't have to look through them in future iterations. This will
+      // only delete events that are older than the longest allowed time, so it will not delete events that might be valid.
       this.deleteOldEvents(requestStartTime);
       function isInRange(event) {
         return event > requestStartTime - (timeFrame * 1000);
@@ -62,10 +66,11 @@ class EventCounter {
     }
 
     /**
-     * Delete events more than evtTooOld seconds ago. This is only run when getEventCount is run.
+     * Delete events more than evtTooOld seconds ago to avoid memory leaks.
+     * This is only run when getEventCount is run.
      * If we want this to run more asynchronously to let getEventCount be faster,
      * we can run this in the background on a timer or something.
-     * @param {Date} requestStartTime 
+     * @param {Date} requestStartTime
      */
     deleteOldEvents(requestStartTime) {
       const evtTooOld = this.evtTooOld; // Keep in scope for function below
